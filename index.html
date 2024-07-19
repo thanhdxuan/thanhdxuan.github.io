@@ -11,10 +11,48 @@
       integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
    <title>Thanh Dau!</title>
+   <style>
+      .bd-callout {
+         padding: 1.25rem;
+         margin-top: 1.25rem;
+         margin-bottom: 1.25rem;
+         border: 1px solid #e9ecef;
+         border-left-width: .25rem;
+         border-radius: .25rem
+      }
+
+      .bd-callout h4 {
+         margin-bottom: .25rem
+      }
+
+      .bd-callout p:last-child {
+         margin-bottom: 0
+      }
+
+      .bd-callout code {
+         border-radius: .25rem
+      }
+
+      .bd-callout+.bd-callout {
+         margin-top: -.25rem
+      }
+
+      .bd-callout-info {
+         border-left-color: #5bc0de
+      }
+
+      .bd-callout-warning {
+         border-left-color: #f0ad4e
+      }
+
+      .bd-callout-danger {
+         border-left-color: #d9534f
+      }
+   </style>
 </head>
 
 <body>
-   <div class="container-sm" style="max-width: 80%;">
+   <div class="container-sm max-vw-60">
       <h1 class="row display-4 py-5 ps-2">Kiểm tra kết quả thi vào lớp 10 - THPT Yên Thành 2</h1>
       <div class="row">
          <form id="sform" class="col-sm-12 d-flex gap-2">
@@ -45,6 +83,7 @@
                </tbody>
             </table>
          </div>
+         <div id="info-text"></div>
       </div>
       <div class="d-flex justify-content-end fst-italic text-danger">Lưu ý: Kết quả chỉ mang tính chất tham khảo, vui
          lòng đợi kết quả chính thức từ nhà trường!</div>
@@ -55,12 +94,19 @@
    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
       integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
    <script>
-      function get_data () {
+      function get_data() {
          id = $('#inputID').val()
          $.post(`https://yt2-scores.onrender.com/rank/${id}`,
             function (data, status) {
                $('#result').empty()
-               $('#result').append(data)
+               $('#info-text').empty()
+               if (data.length == 2) {
+                  $('#result').append(data[0])
+                  $('#info-text').append(data[1])
+               }
+               else {
+                  $('#result').append(data[0])
+               }
             });
       }
 
