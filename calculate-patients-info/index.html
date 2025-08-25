@@ -6,14 +6,22 @@
     <title>Công cụ tính toán tỉ lệ biến chứng sau phẫu thuật</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px 0;
+						font-family: Arial, sans-serif;
+						background-color: #f4f4f4; /* This will be a fallback if the image fails or loads slowly */
+						display: flex;
+						justify-content: center;
+						align-items: flex-start;
+						min-height: 100vh;
+						margin: 0;
+						padding: 20px 0;
+						overflow-y: scroll;
+
+						/* --- ADD THESE BACKGROUND IMAGE PROPERTIES --- */
+						background-image: url('./background.jpg'); /* Replace with your image URL or path */ background-size: cover; /* Ensures the image covers the entire background, potentially cropping parts */
+						background-repeat: no-repeat; /* Prevents the image from repeating */
+						background-position: center center; /* Centers the image */
+						background-attachment: fixed; /* Keeps the background image in place when scrolling */
+						/* --- END BACKGROUND IMAGE PROPERTIES --- */
         }
         .container {
             background-color: #fff;
@@ -148,11 +156,110 @@
             color: #006600; /* Darker green text */
             border-color: #006600;
         }
+				/* **Updated CSS styles (add these to your <style> block):** */
+
+				/* Styling for age and surgery radio groups (can reuse for age) */
+				.single-choice-group { /* New class for age and surgery radio groups */
+						display: flex;
+						flex-direction: column;
+						gap: 10px;
+						padding: 10px 0;
+				}
+				.single-choice-group label {
+						font-weight: normal;
+						color: #333;
+						margin-bottom: 0;
+						display: flex;
+						align-items: center;
+				}
+
+				/* Modal Overlay */
+				.modal-overlay {
+						display: none; /* Hidden by default */
+						position: fixed; /* Stay in place */
+						z-index: 1000; /* Sit on top */
+						left: 0;
+						top: 0;
+						width: 100%; /* Full width */
+						height: 100%; /* Full height */
+						overflow: auto; /* Enable scroll if needed */
+						background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+						justify-content: center;
+						align-items: center;
+				}
+
+				/* Modal Content/Box */
+				.modal-content {
+						background-color: #fefefe;
+						margin: auto; /* Center the box */
+						padding: 30px;
+						border-radius: 8px;
+						box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+						width: 80%; /* Could be more responsive */
+						max-width: 400px; /* Max width for the modal */
+						position: relative;
+						text-align: center;
+				}
+
+				/* The Close Button */
+				.close-button {
+						color: #aaa;
+						position: absolute;
+						top: 10px;
+						right: 20px;
+						font-size: 28px;
+						font-weight: bold;
+						cursor: pointer;
+						line-height: 20px;
+				}
+
+				.close-button:hover,
+				.close-button:focus {
+						color: black;
+						text-decoration: none;
+						cursor: pointer;
+				}
+
+				/* Result display inside modal */
+				#modalCalculationResult { /* Targets the result div inside the modal */
+						margin-top: 15px;
+						padding: 15px;
+						border: 1px solid #ccc;
+						border-radius: 8px;
+						background-color: #f9f9f9;
+						text-align: center;
+						font-size: 1.2em;
+						font-weight: bold;
+						color: #333;
+						min-height: 40px;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+				}
+
+				/* Specific styles for different ranges - Increased specificity for modal result */
+				#modalCalculationResult.result-red {
+						background-color: #ffcccc; /* Light red */
+						color: #cc0000; /* Darker red text */
+						border-color: #cc0000;
+				}
+				#modalCalculationResult.result-yellow {
+						background-color: #fffacd; /* LemonChiffon */
+						color: #cc9900; /* Darker yellow text */
+						border-color: #cc9900;
+				}
+				#modalCalculationResult.result-green {
+						background-color: #ccffcc; /* Light green */
+						color: #006600; /* Darker green text */
+						border-color: #006600;
+				}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Thông Tin Cá Nhân</h1>
+        <h1>Công cụ tính toán tỉ lệ biến chứng phẫu thuật</h1>
+        <h2>Thông tin bệnh nhân</h1>
         <form id="userInfoForm" action="#" method="post">
             <div class="form-group">
                 <label for="hoTen">Họ tên:</label>
@@ -160,9 +267,17 @@
             </div>
 
             <div class="form-group">
-                <label for="tuoi">Tuổi:</label>
-                <input type="number" id="tuoi" name="tuoi" min="0" placeholder="Nhập tuổi (ví dụ: >=64 -> x0.8, <64 -> x0.9)" required>
-                <!-- Note: x0.8, x0.9 are for calculations, not direct input. -->
+                <label>Tuổi:</label>
+                <div class="single-choice-group">
+                    <label for="tuoiLonHonBang64">
+                        <input type="radio" id="tuoiLonHonBang64" name="tuoiOption" value="LonHonHoacBang64" required>
+                        Lớn hơn hoặc bằng 64
+                    </label>
+                    <label for="tuoiNhoHon64">
+                        <input type="radio" id="tuoiNhoHon64" name="tuoiOption" value="NhoHon64">
+                        Nhỏ hơn 64
+                    </label>
+                </div>
             </div>
 
             <div class="form-group">
@@ -408,9 +523,15 @@
             <button type="submit">Tính toán</button>
         </form>
 
-        <div id="calculationResult">
-            <!-- Kết quả tính toán sẽ hiển thị ở đây -->
-        </div>
+				<div id="resultModal" class="modal-overlay">
+						<div class="modal-content">
+								<span class="close-button" id="closeModalButton">&times;</span>
+								<h3>Kết quả tính toán</h3>
+								<div id="modalCalculationResult">
+										<!-- Kết quả tính toán sẽ hiển thị ở đây -->
+								</div>
+						</div>
+				</div>
     </div>
 
     <script>
@@ -458,15 +579,13 @@
                 'taiBienGayMe_checked': 0.7
             };
 
-            // --- 1. Calculate for Tuổi (Age) ---
-            const tuoi = parseFloat(document.getElementById('tuoi').value);
-            if (!isNaN(tuoi)) {
-                if (tuoi >= 64) {
-                    product *= 0.8;
-                } else if (tuoi < 64) {
-                    product *= 0.9;
-                }
-            }
+						const selectedTuoiOption = document.querySelector('input[name="tuoiOption"]:checked');
+						if (selectedTuoiOption) {
+								const tuoiValue = selectedTuoiOption.value;
+								if (calculationFactors[tuoiValue]) {
+										product *= calculationFactors[tuoiValue];
+								}
+						}
 
             // --- 2. Calculate for Giới (Gender) ---
             const selectedGioi = document.querySelector('input[name="gioi"]:checked');
@@ -517,23 +636,47 @@
             }
 
             // --- Display Result and apply conditional styling ---
-            const resultDiv = document.getElementById('calculationResult');
-            resultDiv.innerHTML = ''; // Clear previous content
-            resultDiv.className = ''; // Reset classes
+
+						// --- Display Result in Modal and apply conditional styling ---
+        		const resultModal = document.getElementById('resultModal');
+        		const modalCalculationResultDiv = document.getElementById('modalCalculationResult'); // NEW ID
+
+        		modalCalculationResultDiv.innerHTML = ''; // Clear previous content
+        		modalCalculationResultDiv.classList.remove('result-red', 'result-yellow', 'result-green'); // Remove all color classes before adding new one
+
 
 
             // Apply color based on product value
             if (product < 0.15) {
-                resultDiv.classList.add('result-red');
-                resultDiv.innerHTML = "Tỷ lệ biến chứng sau PT cao!"; // Format to 4 decimal places
+                modalCalculationResultDiv.classList.add('result-red');
+                modalCalculationResultDiv.innerHTML = `Bệnh nhân ${hoTen} có tỷ lệ biến chứng sau PT cao!`; // Format to 4 decimal places
             } else if (product >= 0.15 && product < 0.18) {
-                resultDiv.classList.add('result-yellow');
-                resultDiv.innerHTML = "Tỷ lệ biến chứng sau PT trung bình!"; // Format to 4 decimal places
+                modalCalculationResultDiv.classList.add('result-yellow');
+                modalCalculationResultDiv.innerHTML = `Bệnh nhân ${hoTen} có tỷ lệ biến chứng sau PT trung bình!`; // Format to 4 decimal places
             } else { // product >= 0.18
-                resultDiv.classList.add('result-green');
-                resultDiv.innerHTML = "Tỷ lệ biến chứng sau PT thấp!"; // Format to 4 decimal places
+                modalCalculationResultDiv.classList.add('result-green');
+                modalCalculationResultDiv.innerHTML = `Bệnh nhân ${hoTen} có tỷ lệ biến chứng sau PT thấp!`; // Format to 4 decimal places
             }
+						resultModal.style.display = 'flex'; // Use flex to center content
+
         });
+
+				// Get the modal element - NEW
+				const resultModal = document.getElementById('resultModal');
+				// Get the <span> element that closes the modal - NEW
+				const closeModalButton = document.getElementById('closeModalButton');
+
+				// When the user clicks on <span> (x), close the modal - NEW
+				closeModalButton.onclick = function() {
+						resultModal.style.display = 'none';
+				}
+
+				// When the user clicks anywhere outside of the modal content, close it - NEW
+				window.onclick = function(event) {
+						if (event.target == resultModal) {
+								resultModal.style.display = 'none';
+						}
+				}
     </script>
 </body>
 </html>
