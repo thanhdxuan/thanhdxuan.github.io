@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công cụ tính toán tỉ lệ biến chứng sau phẫu thuật</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+        h2 {
+            margin-top: 35px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="number"],
+        input[type="tel"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        input[type="radio"],
+        input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        .radio-group, .checkbox-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .radio-group label, .checkbox-group label {
+            display: inline-block;
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+        .item-list-section .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .item-list-section .list-item:last-child {
+            border-bottom: none;
+        }
+        .item-list-section .list-item > label {
+            flex-grow: 1;
+            margin-bottom: 0;
+            font-weight: normal;
+            color: #333;
+        }
+        .item-list-section .list-item .radio-options,
+        .item-list-section .list-item .checkbox-options {
+            display: flex;
+            gap: 15px;
+        }
+        /* Styling for the single radio group for surgery types */
+        .surgery-type-radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px 0;
+        }
+        .surgery-type-radio-group label {
+            font-weight: normal;
+            color: #333;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 30px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #calculationResult {
+            margin-top: 30px;
+            padding: 15px;
+            border: 1px solid #ccc; /* Default border */
+            border-radius: 8px;
+            background-color: #f9f9f9; /* Default background */
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333; /* Default text color */
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Smooth transitions */
+        }
+        /* Specific styles for different ranges */
+        #calculationResult.result-red {
+            background-color: #ffcccc; /* Light red */
+            color: #cc0000; /* Darker red text */
+            border-color: #cc0000;
+        }
+        #calculationResult.result-yellow {
+            background-color: #fffacd; /* LemonChiffon */
+            color: #cc9900; /* Darker yellow text */
+            border-color: #cc9900;
+        }
+        #calculationResult.result-green {
+            background-color: #ccffcc; /* Light green */
+            color: #006600; /* Darker green text */
+            border-color: #006600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Thông Tin Cá Nhân</h1>
+        <form id="userInfoForm" action="#" method="post">
+            <div class="form-group">
+                <label for="hoTen">Họ tên:</label>
+                <input type="text" id="hoTen" name="hoTen" placeholder="Nhập họ tên" required>
+            </div>
+
+            <div class="form-group">
+                <label for="tuoi">Tuổi:</label>
+                <input type="number" id="tuoi" name="tuoi" min="0" placeholder="Nhập tuổi (ví dụ: >=64 -> x0.8, <64 -> x0.9)" required>
+                <!-- Note: x0.8, x0.9 are for calculations, not direct input. -->
+            </div>
+
+            <div class="form-group">
+                <label>Giới:</label>
+                <div class="radio-group">
+                    <input type="radio" id="gioiNam" name="gioi" value="Nam" required>
+                    <label for="gioiNam">Nam <!-- (x0.8) --></label>
+                    <input type="radio" id="gioiNu" name="gioi" value="Nữ">
+                    <label for="gioiNu">Nữ <!-- (x0.7) --></label>
+                </div>
+                <!-- Note: x0.8, x0.7 are for calculations, not direct input. -->
+            </div>
+
+            <div class="form-group">
+                <label for="danToc">Dân tộc:</label>
+                <input type="text" id="danToc" name="danToc" placeholder="Nhập dân tộc" required>
+            </div>
+
+            <div class="form-group">
+                <label for="diaChi">Địa chỉ:</label>
+                <input type="text" id="diaChi" name="diaChi" placeholder="Nhập địa chỉ" required>
+            </div>
+
+            <div class="form-group">
+                <label for="sdtLienHe">SĐT liên hệ:</label>
+                <input type="tel" id="sdtLienHe" name="sdtLienHe" placeholder="Nhập số điện thoại (ví dụ: 0123456789)" pattern="[0-9]{10,}" required>
+            </div>
+
+            <h2>Bệnh kèm theo</h2>
+            <div class="item-list-section">
+                <div class="list-item">
+                    <label for="nhoiMauCoTim_co">Nhồi máu cơ tim:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="nhoiMauCoTim_co" name="nhoiMauCoTim" value="Có" required>
+                        <label for="nhoiMauCoTim_co">Có <!-- (x0.8) --></label>
+                        <input type="radio" id="nhoiMauCoTim_khong" name="nhoiMauCoTim" value="Không">
+                        <label for="nhoiMauCoTim_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="suyTim_co">Suy tim:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="suyTim_co" name="suyTim" value="Có" required>
+                        <label for="suyTim_co">Có <!-- (x0.5) --></label>
+                        <input type="radio" id="suyTim_khong" name="suyTim" value="Không">
+                        <label for="suyTim_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="benhMachMauNao_co">Bệnh mạch máu não:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="benhMachMauNao_co" name="benhMachMauNao" value="Có" required>
+                        <label for="benhMachMauNao_co">Có <!-- (x0.6) --></label>
+                        <input type="radio" id="benhMachMauNao_khong" name="benhMachMauNao" value="Không">
+                        <label for="benhMachMauNao_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="matTriNho_co">Mất trí nhớ:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="matTriNho_co" name="matTriNho" value="Có" required>
+                        <label for="matTriNho_co">Có <!-- (x0.9) --></label>
+                        <input type="radio" id="matTriNho_khong" name="matTriNho" value="Không">
+                        <label for="matTriNho_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="benhPhoiManTinh_co">Bệnh phổi mãn tính:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="benhPhoiManTinh_co" name="benhPhoiManTinh" value="Có" required>
+                        <label for="benhPhoiManTinh_co">Có <!-- (x0.7) --></label>
+                        <input type="radio" id="benhPhoiManTinh_khong" name="benhPhoiManTinh" value="Không">
+                        <label for="benhPhoiManTinh_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="benhMoLienKet_co">Bệnh mô liên kết - Bệnh thấp khớp:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="benhMoLienKet_co" name="benhMoLienKet" value="Có" required>
+                        <label for="benhMoLienKet_co">Có <!-- (x0.8) --></label>
+                        <input type="radio" id="benhMoLienKet_khong" name="benhMoLienKet" value="Không">
+                        <label for="benhMoLienKet_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="benhLoetDaDayTaTrang_co">Bệnh loét dạ dày-tá tràng:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="benhLoetDaDayTaTrang_co" name="benhLoetDaDayTaTrang" value="Có" required>
+                        <label for="benhLoetDaDayTaTrang_co">Có <!-- (x0.9) --></label>
+                        <input type="radio" id="benhLoetDaDayTaTrang_khong" name="benhLoetDaDayTaTrang" value="Không">
+                        <label for="benhLoetDaDayTaTrang_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="benhGanNhe_co">Bệnh gan nhẹ:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="benhGanNhe_co" name="benhGanNhe" value="Có" required>
+                        <label for="benhGanNhe_co">Có <!-- (x0.8) --></label>
+                        <input type="radio" id="benhGanNhe_khong" name="benhGanNhe" value="Không">
+                        <label for="benhGanNhe_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="daiThaoDuongKhongBienChung_co">Đái tháo đường không biến chứng:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="daiThaoDuongKhongBienChung_co" name="daiThaoDuongKhongBienChung" value="Có" required>
+                        <label for="daiThaoDuongKhongBienChung_co">Có <!-- (x0.8) --></label>
+                        <input type="radio" id="daiThaoDuongKhongBienChung_khong" name="daiThaoDuongKhongBienChung" value="Không">
+                        <label for="daiThaoDuongKhongBienChung_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="daiThaoDuongCoBienChung_co">Đái tháo đường có biến chứng:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="daiThaoDuongCoBienChung_co" name="daiThaoDuongCoBienChung" value="Có" required>
+                        <label for="daiThaoDuongCoBienChung_co">Có <!-- (x0.5) --></label>
+                        <input type="radio" id="daiThaoDuongCoBienChung_khong" name="daiThaoDuongCoBienChung" value="Không">
+                        <label for="daiThaoDuongCoBienChung_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="lietNuaNguoi_co">Liệt nửa người:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="lietNuaNguoi_co" name="lietNuaNguoi" value="Có" required>
+                        <label for="lietNuaNguoi_co">Có <!-- (x0.6) --></label>
+                        <input type="radio" id="lietNuaNguoi_khong" name="lietNuaNguoi" value="Không">
+                        <label for="lietNuaNguoi_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="benhThan_co">Bệnh thận:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="benhThan_co" name="benhThan" value="Có" required>
+                        <label for="benhThan_co">Có <!-- (x0.7) --></label>
+                        <input type="radio" id="benhThan_khong" name="benhThan" value="Không">
+                        <label for="benhThan_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="benhUngThu_co">Bệnh ung thư:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="benhUngThu_co" name="benhUngThu" value="Có" required>
+                        <label for="benhUngThu_co">Có <!-- (x0.5) --></label>
+                        <input type="radio" id="benhUngThu_khong" name="benhUngThu" value="Không">
+                        <label for="benhUngThu_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="benhGanTrungBinhNang_co">Bệnh gan trung bình hoặc nặng:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="benhGanTrungBinhNang_co" name="benhGanTrungBinhNang" value="Có" required>
+                        <label for="benhGanTrungBinhNang_co">Có <!-- (x0.4) --></label>
+                        <input type="radio" id="benhGanTrungBinhNang_khong" name="benhGanTrungBinhNang" value="Không">
+                        <label for="benhGanTrungBinhNang_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="ungThuDiCan_co">Ung thư di căn:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="ungThuDiCan_co" name="ungThuDiCan" value="Có" required>
+                        <label for="ungThuDiCan_co">Có <!-- (x0.4) --></label>
+                        <input type="radio" id="ungThuDiCan_khong" name="ungThuDiCan" value="Không">
+                        <label for="ungThuDiCan_khong">Không</label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="hiv_co">HIV:</label>
+                    <div class="radio-options">
+                        <input type="radio" id="hiv_co" name="hiv" value="Có" required>
+                        <label for="hiv_co">Có <!-- (x0.4) --></label>
+                        <input type="radio" id="hiv_khong" name="hiv" value="Không">
+                        <label for="hiv_khong">Không</label>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Loại phẫu thuật được chỉ định</h2>
+            <div class="surgery-type-radio-group">
+                <label>
+                    <input type="radio" id="ptTimMach" name="typeOfSurgery" value="PT Tim mạch" required>
+                    PT Tim mạch <!-- (x0.4) -->
+                </label>
+                <label>
+                    <input type="radio" id="ptThanTietNieu" name="typeOfSurgery" value="PT Thận - Tiết niệu">
+                    PT Thận - Tiết niệu <!-- (x0.8) -->
+                </label>
+                <label>
+                    <input type="radio" id="ptThanKinh" name="typeOfSurgery" value="PT Thần kinh">
+                    PT Thần kinh <!-- (x0.7) -->
+                </label>
+                <label>
+                    <input type="radio" id="ptTieuHoa" name="typeOfSurgery" value="PT Tiêu hoá">
+                    PT Tiêu hoá <!-- (x0.5) -->
+                </label>
+                <label>
+                    <input type="radio" id="ptChanThuongChinhHinh" name="typeOfSurgery" value="PT Chấn thương - Chỉnh hình">
+                    PT Chấn thương - Chỉnh hình <!-- (x0.7) -->
+                </label>
+                <label>
+                    <input type="radio" id="ptCKKhac" name="typeOfSurgery" value="PT CK khác">
+                    PT CK khác <!-- (x0.7) -->
+                </label>
+                <label>
+                    <input type="radio" id="ptNone" name="typeOfSurgery" value="Không có phẫu thuật nào" checked>
+                    Không có phẫu thuật nào
+                </label>
+            </div>
+
+            <h2>Tình trạng trong phẫu thuật</h2>
+            <div class="item-list-section">
+                <div class="list-item">
+                    <label for="taiBienPT">Tai biến PT:</label>
+                    <div class="checkbox-options">
+                        <input type="checkbox" id="taiBienPT" name="taiBienPT" value="Có">
+                        <label for="taiBienPT">Có <!-- (x0.8) --></label>
+                    </div>
+                </div>
+
+                <div class="list-item">
+                    <label for="taiBienGayMe">Tai biến gây mê:</label>
+                    <div class="checkbox-options">
+                        <input type="checkbox" id="taiBienGayMe" name="taiBienGayMe" value="Có">
+                        <label for="taiBienGayMe">Có <!-- (x0.7) --></label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit">Tính toán</button>
+        </form>
+
+        <div id="calculationResult">
+            <!-- Kết quả tính toán sẽ hiển thị ở đây -->
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('userInfoForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const hoTen = document.getElementById('hoTen').value.trim();
+            let product = 1.0;
+
+            // Define all factors in a single object for easy lookup
+            const calculationFactors = {
+                // Gender
+                'Nam': 0.8,
+                'Nữ': 0.7,
+
+                // Comorbidities (only 'Có' options contribute)
+                'nhoiMauCoTim_Có': 0.8,
+                'suyTim_Có': 0.5,
+                'benhMachMauNao_Có': 0.6,
+                'matTriNho_Có': 0.9,
+                'benhPhoiManTinh_Có': 0.7,
+                'benhMoLienKet_Có': 0.8,
+                'benhLoetDaDayTaTrang_Có': 0.9,
+                'benhGanNhe_Có': 0.8,
+                'daiThaoDuongKhongBienChung_Có': 0.8,
+                'daiThaoDuongCoBienChung_Có': 0.5,
+                'lietNuaNguoi_Có': 0.6,
+                'benhThan_Có': 0.7,
+                'benhUngThu_Có': 0.5,
+                'benhGanTrungBinhNang_Có': 0.4,
+                'ungThuDiCan_Có': 0.4,
+                'hiv_Có': 0.4,
+
+                // Type of Surgery (value of the radio button)
+                'PT Tim mạch': 0.4,
+                'PT Thận - Tiết niệu': 0.8,
+                'PT Thần kinh': 0.7,
+                'PT Tiêu hoá': 0.5,
+                'PT Chấn thương - Chỉnh hình': 0.7,
+                'PT CK khác': 0.7,
+                'Không có phẫu thuật nào': 1.0, // This explicitly means no change to product
+                
+                // Complications (checkboxes)
+                'taiBienPT_checked': 0.8,
+                'taiBienGayMe_checked': 0.7
+            };
+
+            // --- 1. Calculate for Tuổi (Age) ---
+            const tuoi = parseFloat(document.getElementById('tuoi').value);
+            if (!isNaN(tuoi)) {
+                if (tuoi >= 64) {
+                    product *= 0.8;
+                } else if (tuoi < 64) {
+                    product *= 0.9;
+                }
+            }
+
+            // --- 2. Calculate for Giới (Gender) ---
+            const selectedGioi = document.querySelector('input[name="gioi"]:checked');
+            if (selectedGioi) {
+                const gioiValue = selectedGioi.value;
+                if (calculationFactors[gioiValue]) {
+                    product *= calculationFactors[gioiValue];
+                }
+            }
+
+            // --- 3. Calculate for Comorbidities (Bệnh nền) ---
+            const comorbidities = [
+                'nhoiMauCoTim', 'suyTim', 'benhMachMauNao', 'matTriNho',
+                'benhPhoiManTinh', 'benhMoLienKet', 'benhLoetDaDayTaTrang',
+                'benhGanNhe', 'daiThaoDuongKhongBienChung', 'daiThaoDuongCoBienChung',
+                'lietNuaNguoi', 'benhThan', 'benhUngThu', 'benhGanTrungBinhNang',
+                'ungThuDiCan', 'hiv'
+            ];
+
+            comorbidities.forEach(name => {
+                const selectedOption = document.querySelector(`input[name="${name}"]:checked`);
+                if (selectedOption && selectedOption.value === 'Có') {
+                    const factorKey = `${name}_Có`; // e.g., 'nhoiMauCoTim_Có'
+                    if (calculationFactors[factorKey]) {
+                        product *= calculationFactors[factorKey];
+                    }
+                }
+            });
+
+            // --- 4. Calculate for Type of Surgery (Loại phẫu thuật) ---
+            const selectedSurgery = document.querySelector('input[name="typeOfSurgery"]:checked');
+            if (selectedSurgery) {
+                const surgeryValue = selectedSurgery.value;
+                if (calculationFactors[surgeryValue]) {
+                    product *= calculationFactors[surgeryValue];
+                }
+            }
+
+            // --- 5. Calculate for Complications (Tai biến) ---
+            const taiBienPT = document.getElementById('taiBienPT');
+            if (taiBienPT.checked) {
+                product *= calculationFactors['taiBienPT_checked'];
+            }
+
+            const taiBienGayMe = document.getElementById('taiBienGayMe');
+            if (taiBienGayMe.checked) {
+                product *= calculationFactors['taiBienGayMe_checked'];
+            }
+
+            // --- Display Result and apply conditional styling ---
+            const resultDiv = document.getElementById('calculationResult');
+            resultDiv.innerHTML = ''; // Clear previous content
+            resultDiv.className = ''; // Reset classes
+
+
+            // Apply color based on product value
+            if (product < 0.15) {
+                resultDiv.classList.add('result-red');
+                resultDiv.innerHTML = "Tỷ lệ biến chứng sau PT cao!"; // Format to 4 decimal places
+            } else if (product >= 0.15 && product < 0.18) {
+                resultDiv.classList.add('result-yellow');
+                resultDiv.innerHTML = "Tỷ lệ biến chứng sau PT trung bình!"; // Format to 4 decimal places
+            } else { // product >= 0.18
+                resultDiv.classList.add('result-green');
+                resultDiv.innerHTML = "Tỷ lệ biến chứng sau PT thấp!"; // Format to 4 decimal places
+            }
+        });
+    </script>
+</body>
+</html>
